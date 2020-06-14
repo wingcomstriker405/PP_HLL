@@ -1,0 +1,42 @@
+ --[[
+    "def getVector(a, b, c)",
+    "   return [a, b, c]",
+    "end",
+    "",
+    "def add(v1, v2)",
+    "   return [v1[1] + v2[1], v1[2] + v2[2], v1[3] + v2[3]]--[[",
+    --[["end",
+    "",
+    "def sub(v1, v2)",
+    "   return [v1[1] - v2[1], v1[2] - v2[2], v1[3] - v2[3]]",
+    "end",
+    "",
+    "def scale(v, factor)",
+    "   return [v[1] * factor, v[2] * factor, v[3] * factor]",
+    "end",
+    "",
+    "def dotproduct(v1, v2)",
+    "   return v1[1] * v2[1] + v1[2] * v2[2] + v1[3] * v2[3]",
+    "end",
+    "",
+    ]]
+    
+def main()
+   elements = [3, 2, 1, 2, 3]
+   for i = 1, i <= size(elements), i = i + 1
+       print(elements[i])
+   end
+end
+
+main()"
+    
+
+def main()
+       vector1 = vec(5, 5, 5)
+       vector2 = scale(dir(), 5)
+       vector3 = add(vector1, vector2)
+       vector4 = sub(vec(1, 0, 0), vec(0, 1, 0))
+       print(vector1, vector2, vector3, vector4)
+       print(cross([1, 0, 0], [0, 1, 0]))
+end
+main()

@@ -1,0 +1,85 @@
+system functions list:
+    util:
+        - in
+        - out
+        - print
+    
+    game:
+        - pos
+        - dir
+        - vel
+    
+    math:
+        normal math:
+            - deg
+            - rad
+            - min
+            - max
+            - abs
+            - cos
+            - sin
+            - tan
+            - acos
+            - asin
+            - atan
+            - random
+            - seed
+            - floor
+            - ceil
+            
+        vector math:
+            - vec
+            - add
+            - sub
+            - dot
+            - cross
+            - angle
+            - scale
+            - length
+            - normalize
+        
+    lists:
+        - combine
+        - size
+        - keys
+        - values
+        
+system functions syntax:
+in(<color>) - returns the value of the input block
+out(<color>, <value>) - outputs a value to all blocks colored in the specified color
+print([<value>]) - prints the deepstring of the value
+
+pos() - returns the position of the block (worldposition)
+dir() - returns the direction the block is facing (probably at)
+vel() - returns the velocity of the block
+
+deg(<value>) - radians to degrees
+rad(<value>) - degrees to radians
+min(<value>, <value>) - returns the smaller of the two values
+max(<value>, <value>) - returns the bigger of the two values
+abs(<value>) - returns the absolute value
+cos(<value>) - calculates the cosine of the value
+sin(<value>) - calculates the sine of the value
+tan(<value>) - calculates the tangent of the value
+acos(<value>) - returns the arccosine
+asin(<value>) - returns the arcsine
+atan(<value>) - returns the arctangent
+random() - returns a random value between 0 and 1
+seed(<value>) - sets the seed of the random function
+floor(<value>) - rounds the value down
+ceil(<value>) - rounds the value up
+
+vec(<value>, <value>, <value>) - returns a vector (list) with the given components
+add(<vector>, <vector>) - adds the second vector to the first one
+sub(<vector>, <vector>) - subtracts the second vector from the first
+dot(<vector>, <vector>) - calculates the dot product
+cross(<vector>, <vector>) - calculates the cross product
+angle(<vector>, <vector>) - returns the angle between the two vectors
+scale(<vector>, <value>) - scales the vector by the specified factor
+length(<vector>) - returns the length of the vector
+normalize(<vector>)
+
+combine(<list>, <list>) - adds the second list to the end of the first
+size(<list>) - returns the size of the list
+keys(<list>) - returns a list of the keys in the given list (not ordered)
+values(<list>) - returns a list of the list values (not ordered)

@@ -21,14 +21,21 @@
     "",
     ]]
     
-def main()
-   elements = [3, 2, 1, 2, 3]
-   for i = 1, i <= size(elements), i = i + 1
-       print(elements[i])
-   end
+def main(arg1, arg2)
+       print(arg1)
+       print(arg2)
 end
 
-main()"
+main(1 / 2, (20 * 3) / 4)
+    
+def main()
+        elements = [3, 2, 1, 2, 3]
+        for i = 1, i <= size(elements), i = i + 1
+                print(elements[i])
+        end
+end
+
+main()
     
 
 def main()
@@ -39,4 +46,5 @@ def main()
        print(vector1, vector2, vector3, vector4)
        print(cross([1, 0, 0], [0, 1, 0]))
 end
+
 main()

@@ -1,7 +1,7 @@
 Interpreter = {}
 Interpreter.ooe = {"^","%","/","*","+","-",">>","<<","&","|", "<", ">", "<=", ">=", "==","&&","||", "="}
 Interpreter.hex_abc = {"0","1","2","3","4","5","6","7","8","9","a","b","c","d","e","f"}
-Interpreter.system_functions = {"num", "str", "vec", "add", "sub", "dot", "cross", "angle", "scale", "length", "normalize", "combine", "zip", "size", "keys", "values", "in", "out", "print", "pos", "dir", "vel", "min", "max", "abs", "cos", "sin", "tan", "acos", "asin", "atan", "random", "deg", "rad", "floor", "ceil", "seed", "time"}
+Interpreter.system_functions = {"num", "str", "vec", "add", "sub", "dot", "cross", "angle", "scale", "length", "normalize", "combine", "zip", "size", "keys", "values", "in", "out", "print", "pos", "dir", "vel", "min", "max", "abs", "cos", "sin", "tan", "acos", "asin", "atan", "random", "deg", "rad", "floor", "ceil", "seed", "time", "type"}
     
 function Interpreter.new(raw_code)
     math.randomseed(os.time())
@@ -279,20 +279,63 @@ function Interpreter.setVariable(self, destination, value)
                     end
                 end
             end
+            local result = self:getVariable(value)
             for k, v in pairs(self.global_variables) do
                 if k == destination.v then
-                    local result = self:getVariable(value)
-                    --print("OVERRIDING EXISTING GLOBAL VARIABLE")
+                    if #destination.keys > 0 then
+                        local key_index = 1
+                        local base = self.global_variables[destination.v]
+                        while key_index <= #destination.keys do
+                            if base.vt == "list" then
+                                local key = self:getVariable(self:getValueObject("key_variable", destination.keys[key_index]))
+                                if key_index == #destination.keys then
+                                    base.v[key.v] = self:getValueObject(result.vt, result.v, result.keys)
+                                    return
+                                else
+                                    base = base.v[key.v]
+                                end
+                                key_index = key_index + 1
+                            else
+                                print("ERROR: TRYING TO INDEX NON LIST VARIABLE")
+                                break
+                            end
+                        end
+                    end
                     self.global_variables[destination.v] = self:getValueObject(result.vt, result.v, result.keys)
                     return
                 end
             end
-            local result = self:getVariable(value)
             --print("SETTING USER VARIABLE: ", destination.v, value.v, result.v)
             self.scopes[#self.scopes][#self.scopes[#self.scopes]][destination.v] = self:getValueObject(result.vt, result.v, result.keys)
         else
             --print("SETTING / OVERRIDING GLOBAL VARIABLE")
             local result = self:getVariable(value)
+            for k, v in pairs(self.global_variables) do
+                if k == destination.v then
+                    if #destination.keys > 0 then
+                        local key_index = 1
+                        local base = self.global_variables[destination.v]
+                        while key_index <= #destination.keys do
+                            if base.vt == "list" then
+                                local key = self:getVariable(self:getValueObject("key_variable", destination.keys[key_index]))
+                                if key_index == #destination.keys then
+                                    base.v[key.v] = self:getValueObject(result.vt, result.v, result.keys)
+                                    return
+                                else
+                                    base = base.v[key.v]
+                                end
+                                key_index = key_index + 1
+                            else
+                                print("ERROR: TRYING TO INDEX NON LIST VARIABLE")
+                                break
+                            end
+                        end
+                    end
+                    self.global_variables[destination.v] = self:getValueObject(result.vt, result.v, result.keys)
+                    return
+                end
+            end
+            --print("SETTING GLOBAL VARIABLE FOR THE FIRST TIME")
             self.global_variables[destination.v] = self:getValueObject(result.vt, result.v, result.keys)
         end
             
@@ -488,7 +531,6 @@ function Interpreter.structure(self, line)
     elseif line:match("^if.+") then
         self:evaluateIf(line)
     elseif line:match("^return") then
-        print("RETURNING")
         self:removeFunctionFromStack()
     elseif line:match("^push if env$") then
         self:addScope()
@@ -604,7 +646,9 @@ function Interpreter.executeSystemFunction(self, name, values)
             self:setVariable(self:getValueObject("temporary_variable", "t_return"), self:getValueObject("number", os.time()))
         end
     elseif #values.v == 1 then
-        if name == "normalize" and values.v[1].vt == "list" then
+        if name == "type" then
+            self:setVariable(self:getValueObject("temporary_variable", "t_return"), self:getValueObject("string", values.v[1].vt))
+        elseif name == "normalize" and values.v[1].vt == "list" then
             local sum = 0
             for i = 1, #values.v[1].v, 1 do
                 if values.v[1].v[i].vt == "number" then

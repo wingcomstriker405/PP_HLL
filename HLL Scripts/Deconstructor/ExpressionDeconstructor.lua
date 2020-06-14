@@ -278,8 +278,8 @@ function ExpressionDeconstructor.extractList(self)
         end
         local removed = table.remove(self.stack, #self.stack)
         table.insert(self.compiled, removed)
-        table.insert(self.stack[#self.stack], self:getValueObject("err", "]"))
     end
+    table.insert(self.stack[#self.stack], self:getValueObject("err", "]"))
 end
 
 ----------[ DECONSTRUCTION FUNCTIONS ]----------

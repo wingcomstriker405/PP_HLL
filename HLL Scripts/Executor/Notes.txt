@@ -1,5 +1,6 @@
 system functions list:
     util:
+        - type
         - in
         - out
         - print
@@ -45,6 +46,7 @@ system functions list:
         - values
         
 system functions syntax:
+type(<value>) - returns the type of the value as a string
 in(<color>) - returns the value of the input block
 out(<color>, <value>) - outputs a value to all blocks colored in the specified color
 print([<value>]) - prints the deepstring of the value

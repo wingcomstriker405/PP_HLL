@@ -81,18 +81,22 @@ local user_code6 = {
 }
 
 local user_code = {
-    "def main(arg1, arg2)",
-    "   print(arg1)",
-    "   print(arg2)",
+    "list = []",
+    "",
+    "def main()",
+    "   for i = 0, i <= 10, i = i + 1",
+    "       list[i] = 2 ^ i",
+    "   end",
     "end",
     "",
-    "main(1 / 2, (20 * 3) / 4)"
+    "main()",
+    "print(list)"
 }
 
 function main()
     local deconstructor = Deconstructor.new(user_code)
     local code = deconstructor:deconstruct()
-     if true then
+     if false then
         print("-----[ CODE ]-----")
         for i = 1, #code, 1 do
             print(i - 8, code[i])

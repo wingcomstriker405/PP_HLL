@@ -80,7 +80,7 @@ local user_code6 = {
     "main()"
 }
 
-local user_code = {
+local user_code9 = {
     "list = []",
     "",
     "def main()",
@@ -90,13 +90,40 @@ local user_code = {
     "end",
     "",
     "main()",
-    "print(list)"
+    "print(list)",
+    "print(exp(1))"
+}
+
+local user_code10 = {
+    "def main()",
+    "   mykeys = ['erster', 'zweiter', 'dritter']",
+    "   list = []",
+    "   for i = 1, i <= size(mykeys), i = i + 1",
+    "       list[mykeys[i]] = random()",
+    "   end",
+    "   print(list)",
+    "end",
+    "",
+    "main()"
+}
+
+local user_code = {
+    "def main()",
+    "   test = none",
+    "   print(type(test))",
+    "   print(test)",
+    "   if test == none",
+    "       print('variable is none')",
+    "   end",
+    "end",
+    "",
+    "main()"
 }
 
 function main()
     local deconstructor = Deconstructor.new(user_code)
     local code = deconstructor:deconstruct()
-     if false then
+     if true then
         print("-----[ CODE ]-----")
         for i = 1, #code, 1 do
             print(i - 8, code[i])

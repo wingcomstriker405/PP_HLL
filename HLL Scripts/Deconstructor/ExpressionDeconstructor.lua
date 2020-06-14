@@ -183,6 +183,9 @@ function ExpressionDeconstructor.extractVariable(self)
     if value == "true" or value == "false" then
         table.insert(self.stack[#self.stack], self:getValueObject("boolean", value))
         --print("BOOLEAN: ", value)
+    elseif value == "none" then
+        table.insert(self.stack[#self.stack], self:getValueObject("none", "none"))
+        --print("NONE:", value)
     else
         table.insert(self.stack[#self.stack], self:getValueObject("user_variable", self:getVariablePrefix() .. value))
         --print("VARIABLE: ", value)

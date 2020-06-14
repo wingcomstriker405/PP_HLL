@@ -1,7 +1,7 @@
 Interpreter = {}
-Interpreter.ooe = {"^","%","/","*","+","-",">>","<<","&","|", "<", ">", "<=", ">=", "==","&&","||", "="}
+Interpreter.ooe = {"^","%","/","*","+","-",">>","<<", "<-", "&","|", "<", ">", "<=", ">=", "==","&&","||", "="}
 Interpreter.hex_abc = {"0","1","2","3","4","5","6","7","8","9","a","b","c","d","e","f"}
-Interpreter.system_functions = {"num", "str", "vec", "add", "sub", "dot", "cross", "angle", "scale", "length", "normalize", "combine", "zip", "size", "keys", "values", "in", "out", "print", "pos", "dir", "vel", "min", "max", "abs", "cos", "sin", "tan", "acos", "asin", "atan", "random", "deg", "rad", "floor", "ceil", "seed", "time", "type"}
+Interpreter.system_functions = {"num", "str", "vec", "add", "sub", "dot", "cross", "angle", "scale", "length", "normalize", "combine", "zip", "size", "keys", "values", "in", "out", "print", "pos", "dir", "vel", "min", "max", "abs", "cos", "sin", "tan", "acos", "asin", "atan", "random", "deg", "rad", "floor", "ceil", "exp", "seed", "time", "type"}
     
 function Interpreter.new(raw_code)
     math.randomseed(os.time())
@@ -118,11 +118,17 @@ function Interpreter.nextIsListConstruction(self)
     return self.rest:match("^%[.+")
 end
 
+function Interpreter.nextIsString(self)
+    return self.rest:match("^'.+")
+end
+
 ------------------------------
 function Interpreter.extractIdentifier(self)
     local value = self.rest:match("^[A-Za-z_][A-Za-z0-9_]*")
     if value == "true" or value == "false" then
         table.insert(self.parts, self:getValueObject("boolean", value))
+    elseif value == "none" then
+        table.insert(self.parts, self:getValueObject("none", "none"))
     else
         local variable_type = ""
         if value:match("^v_.+") then
@@ -210,6 +216,28 @@ function Interpreter.extractListCall(self)
     table.insert(self.parts, self:getValueObject(variable_type, value, keys))
 end
 
+function Interpreter.extractString(self)
+    self:increaseIndex("", 1)
+    self:calculateRest()
+    local str = ""
+    local index = 1
+    while index <= #self.rest do
+        local char = self.rest:sub(index, index)
+        if char == "\\" then
+            str = str .. char .. self.rest:sub(index + 1, index + 1)
+            index = index + 1
+        else
+            if char == "'" then
+                break
+            else
+                str = str .. char
+            end
+        end
+        index = index + 1
+    end
+    table.insert(self.parts, self:getValueObject("string", str))
+end
+
 ----------[ DECONSTRUCTION FUNCTIONS ]----------
 function Interpreter.deconstruct(self, stop)
     while self.index <= self.length do
@@ -222,6 +250,8 @@ function Interpreter.deconstruct(self, stop)
             self:extractOperator()
         elseif self:nextIsNumber() then
             self:extractNumber()
+        elseif self:nextIsString() then
+            self:extractString()
         elseif self:nextIsListConstruction() then
             self:extractListConstruction()
         else
@@ -484,6 +514,43 @@ function Interpreter.executeInstruction(self, operator, value1, value2)
                     rv = bit.band(v1, v2)
                 end
             end
+        elseif t1 == "string" then
+            if operator.v == "+" then
+                rt = "string"
+                rv = v1 .. tostring(v2)
+            end
+        elseif t1 == "list" then
+            if t2 == "list" then
+                if operator.v == "+" then
+                    rt = "list"
+                    rv = {}
+                    for i = 1, #v1, 1 do
+                        table.insert(rv, self:getValueObject(v1[i].vt, v1[i].v))
+                    end
+                    for i = 1, #v2, 1 do
+                        table.insert(rv, self:getValueObject(v2[i].vt, v2[i].v))
+                    end
+                end
+            else
+                if operator.v == "<-" then
+                    rt = "list"
+                    rv = {}
+                    for i = 1, #v1, 1 do
+                        table.insert(rv, self:getValueObject(v1[i].vt, v1[i].v))
+                    end
+                    table.insert(rv, self:getValueObject(t2, v2))
+                end
+            end
+        elseif t1 == "none" then
+            if operator.v == "==" then
+                if t2 == "none" then
+                    rt = "boolean"
+                    rv = true
+                else
+                    rt = "boolean"
+                    rv = false
+                end
+            end
         end
         return self:getValueObject(rt, rv)
     end
@@ -709,6 +776,8 @@ function Interpreter.executeSystemFunction(self, name, values)
                 self:setVariable(self:getValueObject("temporary_variable", "t_return"), self:getValueObject("number", math.ceil(values.v[1].v)))
             elseif name == "floor" then
                 self:setVariable(self:getValueObject("temporary_variable", "t_return"), self:getValueObject("number", math.floor(values.v[1].v)))
+            elseif name == "exp" then
+                self:setVariable(self:getValueObject("temporary_variable", "t_return"), self:getValueObject("number", math.exp(values.v[1].v)))
             end
         elseif name == "keys" then
             if values.v[1].vt == "list" then

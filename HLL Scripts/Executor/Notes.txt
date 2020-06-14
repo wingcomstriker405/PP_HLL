@@ -39,6 +39,22 @@ system functions list:
             - length
             - normalize
         
+    files:
+        - open
+        - next
+        - line
+        - stream
+        - filetype
+        - filename
+        - size
+        - current
+        - clear
+        - write
+        - insert
+        - remove
+        - new
+        - exists
+        
     lists:
         - combine
         - size
@@ -80,6 +96,20 @@ angle(<vector>, <vector>) - returns the angle between the two vectors
 scale(<vector>, <value>) - scales the vector by the specified factor
 length(<vector>) - returns the length of the vector
 normalize(<vector>)
+
+open(<string>) - returns a fileiterator of the file
+next(<fileiterator>) - returns the next line in the file
+line(<fileiterator>, <number>) - returns the specified line
+stream(<string>) - returns an output stream to the file if it exists
+new(<string>, <string>) - creates a new file if it doesnt exist
+exists(<string>) - checks if a file with the given name exists
+clear(<stream>) - removes all contents of a file
+filetype(<stream/fileiterator>) - returns the type of the file that stream / fileiterator access
+filename(<stream/fileiterator>) - returns the name of the file that stream / fileiterator access
+size(<fileiterator>) - returns the size of the file
+insert(<stream>, <number>, <string>) - inserts a line in a file
+remove(<stream>, <number>) - removes a line from the file and returns it
+remove(<string>) - removes the file with the given name if it exists
 
 combine(<list>, <list>) - adds the second list to the end of the first
 size(<list>) - returns the size of the list

@@ -107,14 +107,39 @@ local user_code10 = {
     "main()"
 }
 
+local files = {
+    {
+        header = {
+            filename = "first file",
+            filetype = "data",
+        },
+        content = {
+            "first line in first file",
+            "second line in first file",
+            "third line in first file",
+            "another line in the first file"
+        }
+    },
+    {
+        header = {
+            filename = "second file",
+            filetype = "data",
+        },
+        content = {
+            "first line in second file",
+            "second line in second file",
+            "third line in second file"
+        }
+    }
+}
+
 local user_code = {
     "def main()",
-    "   test = none",
-    "   print(type(test))",
-    "   print(test)",
-    "   if test == none",
-    "       print('variable is none')",
-    "   end",
+    "   # this is a comment",
+    "   print(exists('first file'))",
+    "   print('removed', remove('first file'))",
+    "   print(exists('first file'))",
+    "   print(exists('test'))",
     "end",
     "",
     "main()"
@@ -130,7 +155,7 @@ function main()
         end
     end
     
-    local iterpreter  = Interpreter.new(code)
+    local iterpreter  = Interpreter.new(code, files)
     local finished = false
     repeat
         finished = iterpreter:evaluateNextLine()

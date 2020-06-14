@@ -18,6 +18,7 @@ function Deconstructor.new(code)
     obj.elseif_statement = "^elseif%s+.+$"
     obj.else_statement = "^else$"
     obj.return_statement = "^return.*$"
+    obj.comment = "^#.+$"
 
     obj.line = ""
     obj.index = 1
@@ -34,7 +35,8 @@ function Deconstructor.deconstruct(self)
     for i = 1, #self.code, 1 do
         self.index = i
         self.line = self:trim(self.code[i])
-        if self:lineIs(self.function_signature) then
+        if self:lineIs(self.comment) then
+        elseif self:lineIs(self.function_signature) then
             self:compileFunctionSiganture()
         elseif self:lineIs(self.for_loop) then
             self:compileForLoop()

@@ -1,9 +1,9 @@
 Interpreter = {}
 Interpreter.ooe = {"^","%","/","*","+","-",">>","<<", "<-", "&","|", "<", ">", "<=", ">=", "==","&&","||", "="}
 Interpreter.hex_abc = {"0","1","2","3","4","5","6","7","8","9","a","b","c","d","e","f"}
-Interpreter.system_functions = {"num", "str", "vec", "add", "sub", "dot", "cross", "angle", "scale", "length", "normalize", "combine", "zip", "size", "keys", "values", "in", "out", "print", "pos", "dir", "vel", "min", "max", "abs", "cos", "sin", "tan", "acos", "asin", "atan", "random", "deg", "rad", "floor", "ceil", "exp", "seed", "time", "type"}
+Interpreter.system_functions = {"num", "str", "vec", "add", "sub", "dot", "cross", "angle", "scale", "length", "normalize", "combine", "zip", "size", "keys", "values", "in", "out", "print", "pos", "dir", "vel", "min", "max", "abs", "cos", "sin", "tan", "acos", "asin", "atan", "random", "deg", "rad", "floor", "ceil", "exp", "seed", "time", "type", "open", "next", "line", "stream", "clear", "filetype", "filename", "current", "write", "insert", "remove", "new", "exists"}
     
-function Interpreter.new(raw_code)
+function Interpreter.new(raw_code, files)
     math.randomseed(os.time())
     math.random(); math.random(); math.random()
     
@@ -11,6 +11,7 @@ function Interpreter.new(raw_code)
     for k, v in pairs(Interpreter) do
         obj[k] = v
     end
+    obj.files = files
     obj.outside = {}
     obj.signatures = {}
     obj.code = {}
@@ -715,6 +716,64 @@ function Interpreter.executeSystemFunction(self, name, values)
     elseif #values.v == 1 then
         if name == "type" then
             self:setVariable(self:getValueObject("temporary_variable", "t_return"), self:getValueObject("string", values.v[1].vt))
+        elseif name == "exists" and values.v[1].vt == "string" then
+            for i = 1, #self.files, 1 do
+                if self.files[i].header.filename == values.v[1].v then
+                    self:setVariable(self:getValueObject("temporary_variable", "t_return"), self:getValueObject("boolean", true)) 
+                    return
+                end
+            end
+            self:setVariable(self:getValueObject("temporary_variable", "t_return"), self:getValueObject("boolean", false))
+            return
+        elseif name == "remove" and values.v[1].vt == "string" then
+            for i = 1, #self.files, 1 do
+                if self.files[i].header.filename == values.v[1].v then
+                    table.remove(self.files, i)
+                    self:setVariable(self:getValueObject("temporary_variable", "t_return"), self:getValueObject("boolean", true)) 
+                    return
+                end
+            end
+            self:setVariable(self:getValueObject("temporary_variable", "t_return"), self:getValueObject("boolean", false))
+            return
+        elseif name == "stream" and values.v[1].vt == "string" then
+            for i = 1, #self.files, 1 do
+                if self.files[i].header.filename == values.v[1].v then
+                    self:setVariable(self:getValueObject("temporary_variable", "t_return"), self:getValueObject("stream", {filename = self.files[i].header.filename, filetype = self.files[i].header.filetype, ref=self.files[i]})) 
+                    return
+                end
+            end
+            print("ERROR: CANT OPEN STREAM TO NONE EXISTING FILE")
+        elseif name == "clear" and values.v[1].vt == "stream" then
+            values.v[1].v.ref.content = {}
+        elseif name == "open" then
+            if values.v[1].vt == "string" then
+                for i = 1, #self.files, 1 do
+                    if self.files[i].header.filename == values.v[1].v then
+                        self:setVariable(self:getValueObject("temporary_variable", "t_return"), self:getValueObject("fileiterator", {index=1, filename=self.files[i].header.filename, filetype=self.files[i].header.filetype, ref=self.files[i]}))
+                        return
+                    end
+                end
+                print("ERROR: FILE NOT FOUND")
+            else
+                print("ERROR: FILENAME MUST BE STRING")
+            end
+        elseif name == "next" and values.v[1].vt == "fileiterator" then
+            if values.v[1].v.ref.content[values.v[1].v.index] then
+                self:setVariable(self:getValueObject("temporary_variable", "t_return"), self:getValueObject("string", values.v[1].v.ref.content[values.v[1].v.index]))
+                values.v[1].v.index = values.v[1].v.index + 1
+            else
+                self:setVariable(self:getValueObject("temporary_variable", "t_return"), self:getValueObject("none", "none"))
+            end
+        elseif name == "current" and values.v[1].vt == "fileiterator" then
+            self:setVariable(self:getValueObject("temporary_variable", "t_return"), self:getValueObject("number", values.v[1].v.index))
+        elseif name == "filetype" then
+            if values.v[1].vt == "fileiterator" or values.v[1].vt == "stream" then
+                self:setVariable(self:getValueObject("temporary_variable", "t_return"), self:getValueObject("string", values.v[1].v.filetype))
+            end
+        elseif name == "filename" then
+            if values.v[1].vt == "fileiterator" or values.v[1].vt == "stream" then
+                self:setVariable(self:getValueObject("temporary_variable", "t_return"), self:getValueObject("string", values.v[1].v.filename))
+            end
         elseif name == "normalize" and values.v[1].vt == "list" then
             local sum = 0
             for i = 1, #values.v[1].v, 1 do
@@ -748,8 +807,12 @@ function Interpreter.executeSystemFunction(self, name, values)
             if values.v[1].v:match("^%d+") then
                 self:setVariable(self:getValueObject("temporary_variable", "t_return"), self:getValueObject("number", #values.v[1].v))
             end
-        elseif name == "size" and values.v[1].vt == "list" then
-            self:setVariable(self:getValueObject("temporary_variable", "t_return"), self:getValueObject("number", #values.v[1].v))
+        elseif name == "size" then
+            if values.v[1].vt == "list" then
+                self:setVariable(self:getValueObject("temporary_variable", "t_return"), self:getValueObject("number", #values.v[1].v))
+            elseif values.v[1].vt == "fileiterator" then
+                self:setVariable(self:getValueObject("temporary_variable", "t_return"), self:getValueObject("number", #values.v[1].v.ref.content))
+            end
         elseif values.v[1].vt == "number" then
             if name == "abs" then
                 self:setVariable(self:getValueObject("temporary_variable", "t_return"), self:getValueObject("number", math.abs(values.v[1].v)))
@@ -808,6 +871,30 @@ function Interpreter.executeSystemFunction(self, name, values)
                 end
                 self:setVariable(self:getValueObject("temporary_variable", "t_return"), self:getValueObject("list", combined))
             end
+        elseif name == "line" and values.v[1].vt == "fileiterator" and values.v[2].vt == "number" then
+            if values.v[1].v.ref.content[values.v[2].v] then
+                self:setVariable(self:getValueObject("temporary_variable", "t_return"), self:getValueObject("string", values.v[1].v.ref.content[values.v[2].v]))
+            else
+                self:setVariable(self:getValueObject("temporary_variable", "t_return"), self:getValueObject("none", "none"))
+            end
+        elseif name == "new" and values.v[1].vt == "string" and values.v[2].vt == "string" then
+            for i = 1, #self.files, 1 do
+                if self.files[i].header.filename == values.v[1].v then
+                    self:setVariable(self:getValueObject("temporary_variable", "t_return"), self:getValueObject("boolean", false))
+                    return
+                end
+            end
+            table.insert(self.files, {header = {filename = values.v[1].v, filetype = values.v[2].v}, content = {}})
+            self:setVariable(self:getValueObject("temporary_variable", "t_return"), self:getValueObject("boolean", true))
+        elseif name == "remove" and values.v[1].vt == "stream" and values.v[2].vt == "number" then
+            local removed = table.remove(values.v[1].v.ref.content, values.v[2].v)
+            if removed then
+                self:setVariable(self:getValueObject("temporary_variable", "t_return"), self:getValueObject("string", removed))
+            else
+                self:setVariable(self:getValueObject("temporary_variable", "t_return"), self:getValueObject("none", "none"))
+            end
+        elseif name == "write" and values.v[1].vt == "stream" and values.v[2].vt == "string" then
+            table.insert(values.v[1].v.ref.content, values.v[2].v)
         elseif name == "in" then
             if values.v[2].vt == "string" then
                 
@@ -915,17 +1002,27 @@ function Interpreter.executeSystemFunction(self, name, values)
                 end
             end
         end
+    elseif #values.v == 3 then
+        if name == "insert" and values.v[1].vt == "stream" and values.v[2].vt == "number" and values.v[3].vt == "string" then
+            table.insert(values.v[1].v.ref.content, values.v[2].v, values.v[3].v)
+        end
     end
 end
 
 function Interpreter.getDeepString(self, obj)
-    local str = tostring(obj.v)
+    local str = ""
     if obj.vt == "list" then
         str = "["
         for k, v in pairs(obj.v) do
             str = str .. k .. ": " .. self:getDeepString(v) .. ", "
         end
         str = ((str:match("(%[.+), ")) or "[") .. "]"
+    elseif obj.vt == "fileiterator" then
+        str = "[fileiterator: " .. obj.v.filename .. "]"
+    elseif obj.vt == "stream" then
+        str = "[stream: " .. obj.v.filename .. "]"
+    else
+        str = tostring(obj.v)
     end
     return str
 end

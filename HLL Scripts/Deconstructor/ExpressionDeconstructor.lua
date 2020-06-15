@@ -97,7 +97,7 @@ function ExpressionDeconstructor.nextIsListCall(self)
 end
 
 function ExpressionDeconstructor.nextIsNumber(self)
-    return self.rest:match("^%d+.*")
+    return self.rest:match("^-?%d+.*")
 end
 
 function ExpressionDeconstructor.nextIsBits(self)
@@ -137,13 +137,13 @@ function ExpressionDeconstructor.extractFunctionCall(self)
     if #parts > 0 then
         local name = self:getTempPrefix()
         table.insert(argument_list, self:getValueObject("temporary_variable", name))
-        table.insert(self.compiled, {self:getValueObject("temporary_variable", name), self:getValueObject("operator", "="), self:getValueObject("err", " ")})
+        table.insert(self.compiled, {self:getValueObject("temporary_variable", name), self:getValueObject("err", " "), self:getValueObject("operator", "="), self:getValueObject("err", " ")})
         for i = 1, #parts, 1 do
             if parts[i].vt == "err" and parts[i].v == "," then
                 name = self:getTempPrefix()
                 table.insert(argument_list, parts[i])
                 table.insert(argument_list, self:getValueObject("temporary_variable", name))
-                table.insert(self.compiled, {self:getValueObject("temporary_variable", name), self:getValueObject("operator", "=")})
+                table.insert(self.compiled, {self:getValueObject("temporary_variable", name), self:getValueObject("err", " "), self:getValueObject("operator", "=")})
             else
                 table.insert(self.compiled[#self.compiled], parts[i])
             end
@@ -193,8 +193,8 @@ function ExpressionDeconstructor.extractVariable(self)
 end
 
 function ExpressionDeconstructor.extractNumber(self)
-    local value = self.rest:match("^%d+%.?%d*")
-    table.insert(self.stack[#self.stack], self:getValueObject("number", value))
+    local value = self.rest:match("^-?%d+%.?%d*")
+    table.insert(self.stack[#self.stack], self:getValueObject("number", tonumber(value)))
     self:increaseIndex(value)
     --print("NUMBER: ", value)
 end
@@ -257,23 +257,27 @@ function ExpressionDeconstructor.extractNested(self)
 end
 
 function ExpressionDeconstructor.extractList(self)
-    table.insert(self.stack[#self.stack], self:getValueObject("err", "["))
+    local temp_name = self:getTempPrefix()
+    table.insert(self.stack[#self.stack], self:getValueObject("temporary_variable", temp_name))
+    --
     local char = self.rest:sub(1, 1)
     self:increaseIndex("", 1)
+    self:calculateRest()
     self:deconstructExpression("]")
+    local additional = {self:getValueObject("temporary_variable", temp_name), self:getValueObject("err", " "), self:getValueObject("err", "="), self:getValueObject("err", " "), self:getValueObject("err", "[")}
     local list_parts = table.remove(self.compiled)
     if #list_parts > 0 then
         local name = self:getTempPrefix()
-        table.insert(self.stack[#self.stack], self:getValueObject("err", name))
-        table.insert(self.stack, {self:getValueObject("err", name), self:getValueObject("err", " "), self:getValueObject("operator", "=")})
+        table.insert(additional, self:getValueObject("err", name))
+        table.insert(self.stack, {self:getValueObject("err", name), self:getValueObject("err", " "), self:getValueObject("operator", "="), self:getValueObject("err", " ")})
         for i = 1, #list_parts, 1 do
             local ele = list_parts[i]
             if ele.vt == "err" and ele.v == "," then
                 name = self:getTempPrefix()
                 local removed = table.remove(self.stack, #self.stack)
                 table.insert(self.compiled, removed)
-                table.insert(self.stack[#self.stack], ele)
-                table.insert(self.stack[#self.stack], self:getValueObject("err", name))
+                table.insert(additional, ele)
+                table.insert(additional, self:getValueObject("err", name))
                 table.insert(self.stack, {self:getValueObject("err", name), self:getValueObject("err", " "), self:getValueObject("operator", "=")})
             else
                 table.insert(self.stack[#self.stack], ele)
@@ -282,7 +286,8 @@ function ExpressionDeconstructor.extractList(self)
         local removed = table.remove(self.stack, #self.stack)
         table.insert(self.compiled, removed)
     end
-    table.insert(self.stack[#self.stack], self:getValueObject("err", "]"))
+    table.insert(additional, self:getValueObject("err", "]"))
+    table.insert(self.compiled, additional)
 end
 
 ----------[ DECONSTRUCTION FUNCTIONS ]----------

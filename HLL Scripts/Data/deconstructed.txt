@@ -1,0 +1,501 @@
+OUTSIDE
+t_1 = []
+v_hex_abc = t_1
+a_1 = []
+function_call main a_1
+t_1 = t_return
+t_1
+FUNCTIONS
+main  >> 1
+createHexDictionary  >> 52
+validUserInformation v_username v_password >> 94
+mainmenu  >> 132
+rgbToIntRgb  >> 214
+intRgbToRgb  >> 297
+intToHex v_number >> 345
+hexToInt  >> 401
+CODE
+push function env
+a_1 = []
+function_call createHexDictionary a_1
+t_1 = t_return
+t_1
+t_2 = 'enter your username!'
+a_1 = [t_2]
+function_call print a_1
+t_1 = t_return
+t_1
+a_1 = []
+function_call input a_1
+t_1 = t_return
+v_username = t_1
+t_2 = 'enter your password!'
+a_1 = [t_2]
+function_call print a_1
+t_1 = t_return
+t_1
+a_1 = []
+function_call input a_1
+t_1 = t_return
+v_password = t_1
+t_2 = v_username
+t_3 = v_password
+a_1 = [t_2,t_3]
+function_call validUserInformation a_1
+t_1 = t_return
+t_condition = t_1
+if t_condition >> 43
+push if env
+t_2 = 'hello ' + v_username + '!'
+a_1 = [t_2]
+function_call print a_1
+t_1 = t_return
+t_1
+a_1 = []
+function_call mainmenu a_1
+t_1 = t_return
+t_1
+pop if env
+jumpr  9
+else
+push else env
+t_2 = 'user information is invalid'
+a_1 = [t_2]
+function_call print a_1
+t_1 = t_return
+t_1
+pop else env
+pop function env
+push function env
+push loop env
+v_i = 0
+jumpr 2
+v_i += 1
+t_condition = v_i < 16
+if t_condition >> 92
+t_condition = v_i < 10
+if t_condition >> 76
+push if env
+k_1 = v_i
+t_2 = v_i
+a_1 = [t_2]
+function_call str a_1
+t_1 = t_return
+v_hex_abc[k_1] = t_1
+t_2 = v_i
+a_1 = [t_2]
+function_call str a_1
+t_1 = t_return
+k_1 = t_1
+v_hex_abc[k_1] = v_i
+pop if env
+jumpr  16
+else
+push else env
+k_1 = v_i
+t_2 = 87 + v_i
+a_1 = [t_2]
+function_call char a_1
+t_1 = t_return
+v_hex_abc[k_1] = t_1
+t_2 = 87 + v_i
+a_1 = [t_2]
+function_call char a_1
+t_1 = t_return
+k_1 = t_1
+v_hex_abc[k_1] = v_i
+pop else env
+jumpr -35
+pop loop env
+pop function env
+push function env
+t_2 = 'accounts'
+a_1 = [t_2]
+function_call open a_1
+t_1 = t_return
+v_f = t_1
+push loop env
+t_2 = v_f
+a_1 = [t_2]
+function_call current a_1
+t_1 = t_return
+t_4 = v_f
+a_2 = [t_4]
+function_call size a_2
+t_3 = t_return
+t_condition = t_1 <= t_3
+if t_condition >> 127
+t_2 = v_f
+a_1 = [t_2]
+function_call next a_1
+t_1 = t_return
+t_4 = v_f
+a_2 = [t_4]
+function_call next a_2
+t_3 = t_return
+t_condition = t_1 == v_username && t_3 == v_password
+if t_condition >> 126
+push if env
+t_1 = true
+t_return = t_1
+return
+pop if env
+jumpr -25
+pop loop env
+t_1 = false
+t_return = t_1
+return
+pop function env
+push function env
+push loop env
+t_condition = true
+if t_condition >> 212
+t_2 = 'what do you want to do?'
+a_1 = [t_2]
+function_call print a_1
+t_1 = t_return
+t_1
+t_2 = '1 - convert r g b values to int rgb value'
+a_1 = [t_2]
+function_call print a_1
+t_1 = t_return
+t_1
+t_2 = '2 - convert int rgb value to r g b values'
+a_1 = [t_2]
+function_call print a_1
+t_1 = t_return
+t_1
+t_2 = '3 - convert int to hex'
+a_1 = [t_2]
+function_call print a_1
+t_1 = t_return
+t_1
+t_2 = '4 - convert hex to int'
+a_1 = [t_2]
+function_call print a_1
+t_1 = t_return
+t_1
+t_2 = 'exit - leave'
+a_1 = [t_2]
+function_call print a_1
+t_1 = t_return
+t_1
+a_1 = []
+function_call input a_1
+t_1 = t_return
+v_option = t_1
+t_condition = v_option == '1'
+if t_condition >> 179
+push if env
+a_1 = []
+function_call rgbToIntRgb a_1
+t_1 = t_return
+t_1
+pop if env
+jumpr  33
+t_condition = v_option == '2'
+if t_condition >> 188
+push elseif env
+a_1 = []
+function_call intRgbToRgb a_1
+t_1 = t_return
+t_1
+pop elseif env
+jumpr  24
+t_condition = v_option == '3'
+if t_condition >> 197
+push elseif env
+a_1 = []
+function_call intToHex a_1
+t_1 = t_return
+t_1
+pop elseif env
+jumpr  15
+t_condition = v_option == '4'
+if t_condition >> 206
+push elseif env
+a_1 = []
+function_call hexToInt a_1
+t_1 = t_return
+t_1
+pop elseif env
+jumpr  6
+t_condition = v_option == 'exit'
+if t_condition >> 211
+push elseif env
+return
+pop elseif env
+jumpr -77
+pop loop env
+pop function env
+push function env
+t_2 = 'enter the red value!'
+a_1 = [t_2]
+function_call print a_1
+t_1 = t_return
+t_1
+a_1 = []
+function_call input a_1
+t_1 = t_return
+v_str_r = t_1
+t_2 = 'enter the green value!'
+a_1 = [t_2]
+function_call print a_1
+t_1 = t_return
+t_1
+a_1 = []
+function_call input a_1
+t_1 = t_return
+v_str_g = t_1
+t_2 = 'enter the blue value!'
+a_1 = [t_2]
+function_call print a_1
+t_1 = t_return
+t_1
+a_1 = []
+function_call input a_1
+t_1 = t_return
+v_str_b = t_1
+t_2 = v_str_r
+t_3 = '^%d+$'
+a_1 = [t_2,t_3]
+function_call matches a_1
+t_1 = t_return
+t_5 = v_str_g
+t_6 = '^%d+$'
+a_2 = [t_5,t_6]
+function_call matches a_2
+t_4 = t_return
+t_8 = v_str_b
+t_9 = '^%d+$'
+a_3 = [t_8,t_9]
+function_call matches a_3
+t_7 = t_return
+t_condition = t_1 && t_4 && t_7
+if t_condition >> 284
+push if env
+t_3 = v_str_r
+a_1 = [t_3]
+function_call num a_1
+t_2 = t_return
+t_1 = t_2 << 16
+t_6 = v_str_g
+a_2 = [t_6]
+function_call num a_2
+t_5 = t_return
+t_4 = t_5 << 8
+t_9 = v_str_b
+a_3 = [t_9]
+function_call num a_3
+t_8 = t_return
+t_7 = t_8
+v_value = t_1 | t_4 | t_7
+t_2 = 'int rgb value is: '
+t_3 = v_value
+a_1 = [t_2,t_3]
+function_call print a_1
+t_1 = t_return
+t_1
+pop if env
+jumpr  9
+else
+push else env
+t_2 = 'values not valid!'
+a_1 = [t_2]
+function_call print a_1
+t_1 = t_return
+t_1
+pop else env
+a_1 = []
+function_call input a_1
+t_1 = t_return
+t_1
+pop function env
+push function env
+t_2 = 'enter int rgb value!'
+a_1 = [t_2]
+function_call print a_1
+t_1 = t_return
+t_1
+a_1 = []
+function_call input a_1
+t_1 = t_return
+v_str_int_rgb = t_1
+t_2 = v_str_int_rgb
+t_3 = '^%d+$'
+a_1 = [t_2,t_3]
+function_call matches a_1
+t_1 = t_return
+t_condition = t_1
+if t_condition >> 332
+push if env
+t_2 = v_str_int_rgb
+a_1 = [t_2]
+function_call num a_1
+t_1 = t_return
+v_value = t_1
+v_r = v_value >> 16 & 255
+v_g = v_value >> 8 & 255
+v_b = v_value >> 0 & 255
+t_2 = 'R: ' + v_r
+t_3 = 'G: ' + v_g
+t_4 = 'B: ' + v_b
+a_1 = [t_2,t_3,t_4]
+function_call print a_1
+t_1 = t_return
+t_1
+pop if env
+jumpr  9
+else
+push else env
+t_2 = 'value not valid!'
+a_1 = [t_2]
+function_call print a_1
+t_1 = t_return
+t_1
+pop else env
+a_1 = []
+function_call input a_1
+t_1 = t_return
+t_1
+pop function env
+push function env
+t_2 = 'enter a positive integer!'
+a_1 = [t_2]
+function_call print a_1
+t_1 = t_return
+t_1
+a_1 = []
+function_call input a_1
+t_1 = t_return
+v_str_int = t_1
+t_2 = v_str_int
+t_3 = '^%d+$'
+a_1 = [t_2,t_3]
+function_call matches a_1
+t_1 = t_return
+t_condition = t_1
+if t_condition >> 388
+push if env
+t_2 = v_str_int
+a_1 = [t_2]
+function_call num a_1
+t_1 = t_return
+v_number = t_1
+v_hex_value = ''
+push loop env
+t_condition = v_number > 0
+if t_condition >> 380
+k_1 = v_number % 16 + 1
+v_hex_value = v_hex_abc[k_1] + v_hex_value
+t_2 = v_number / 16
+a_1 = [t_2]
+function_call floor a_1
+t_1 = t_return
+v_number = t_1
+jumpr -9
+pop loop env
+t_2 = 'HEX: 0x' + v_hex_value
+a_1 = [t_2]
+function_call print a_1
+t_1 = t_return
+t_1
+pop if env
+jumpr  9
+else
+push else env
+t_2 = 'invalid number'
+a_1 = [t_2]
+function_call print a_1
+t_1 = t_return
+t_1
+pop else env
+a_1 = []
+function_call input a_1
+t_1 = t_return
+t_1
+pop function env
+push function env
+t_2 = 'enter hex value (e.g. 0xff or ff)'
+a_1 = [t_2]
+function_call print a_1
+t_1 = t_return
+t_1
+a_1 = []
+function_call input a_1
+t_1 = t_return
+v_str_hex = t_1
+v_hex = ''
+t_2 = v_str_hex
+t_3 = '^0x[0-9a-f]+$'
+a_1 = [t_2,t_3]
+function_call matches a_1
+t_1 = t_return
+t_condition = t_1
+if t_condition >> 429
+push if env
+t_2 = v_str_hex
+t_3 = '^0x'
+t_4 = ''
+a_1 = [t_2,t_3,t_4]
+function_call replace a_1
+t_1 = t_return
+v_hex = t_1
+pop if env
+jumpr  11
+t_2 = v_str_hex
+t_3 = '^[0-9a-f]+$'
+a_1 = [t_2,t_3]
+function_call matches a_1
+t_1 = t_return
+t_condition = t_1
+if t_condition >> 439
+push elseif env
+v_hex = v_str_hex
+pop elseif env
+t_2 = v_hex
+a_1 = [t_2]
+function_call size a_1
+t_1 = t_return
+v_s = t_1
+t_condition = v_s > 0
+if t_condition >> 472
+push if env
+v_sum = 0
+push loop env
+v_i = 1
+jumpr 2
+v_i += 1
+t_condition = v_i <= v_s
+if t_condition >> 464
+t_2 = v_hex
+t_3 = v_i
+t_4 = v_i
+a_1 = [t_2,t_3,t_4]
+function_call substring a_1
+t_1 = t_return
+k_1 = t_1
+t_5 = v_s - v_i
+v_sum += v_hex_abc[k_1] * 16 ^ t_5
+jumpr -12
+pop loop env
+t_2 = 'number: ' + v_sum
+a_1 = [t_2]
+function_call print a_1
+t_1 = t_return
+t_1
+pop if env
+jumpr  9
+else
+push else env
+t_2 = 'invalid value!'
+a_1 = [t_2]
+function_call print a_1
+t_1 = t_return
+t_1
+pop else env
+a_1 = []
+function_call input a_1
+t_1 = t_return
+t_1
+pop function env

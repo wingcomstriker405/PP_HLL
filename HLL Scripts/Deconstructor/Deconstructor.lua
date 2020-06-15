@@ -163,11 +163,11 @@ function Deconstructor.compileIfStatement(self)
 end
 
 function Deconstructor.compileElseIfStatement(self)
-    if self.block_stack[#self.block_stack][1] == "if" then
+    if self.block_stack[#self.block_stack][1] == "if" or self.block_stack[#self.block_stack][1] == "elseif" then
         self.block_stack[#self.block_stack][4] = #self.generated + 1
         table.insert(self.generated, "pop " .. self.block_stack[#self.block_stack][1] .. " env")
         table.insert(self.generated, "jumpr ")
-        local condition = self:trim(self.line:match("if%s+(.+)$"))
+        local condition = self:trim(self.line:match("elseif%s+(.+)$"))
         local condition_code = self.exp_deconstructor:deconstruct(condition)
         local condition_line = #self.generated + 1
         for i = 1, #condition_code, 1 do

@@ -1,8 +1,9 @@
 Interpreter = {}
-Interpreter.ooe = {"^","%","/","*","+","-",">>","<<", "<-", "&","|", "<", ">", "<=", ">=", "==","&&","||", "="}
+Interpreter.fatal_error = false
+Interpreter.ooe = {"^","%","/","*","+","-",">>","<<", "++", "<-", "&","|", "<", ">", "<=", ">=", "==", "!=","&&","||", "+=", "-=", "/=", "*=", "%=", "^=", "="}
 Interpreter.hex_abc = {"0","1","2","3","4","5","6","7","8","9","a","b","c","d","e","f"}
-Interpreter.system_functions = {"num", "str", "vec", "add", "sub", "dot", "cross", "angle", "scale", "length", "normalize", "combine", "zip", "size", "keys", "values", "in", "out", "print", "pos", "dir", "vel", "min", "max", "abs", "cos", "sin", "tan", "acos", "asin", "atan", "random", "deg", "rad", "floor", "ceil", "exp", "seed", "time", "type", "open", "next", "line", "stream", "clear", "filetype", "filename", "current", "write", "insert", "remove", "new", "exists"}
-    
+Interpreter.system_functions = {"num", "str", "vec", "add", "sub", "dot", "cross", "angle", "scale", "length", "normalize", "combine", "size", "keys", "values", "in", "out", "print", "pos", "dir", "vel", "min", "max", "abs", "cos", "sin", "tan", "acos", "asin", "atan", "random", "deg", "rad", "floor", "ceil", "exp", "seed", "time", "type", "open", "next", "line", "stream", "clear", "filetype", "filename", "current", "write", "insert", "remove", "new", "exists", "matches", "substring", "replace", "char", "input"}
+
 function Interpreter.new(raw_code, files)
     math.randomseed(os.time())
     math.random(); math.random(); math.random()
@@ -108,7 +109,7 @@ function Interpreter.nextIsOperator(self)
 end
 
 function Interpreter.nextIsNumber(self)
-    return self.rest:match("^%d+%.?%d*.*")
+    return self.rest:match("^-?%d+%.?%d*.*")
 end
 
 function Interpreter.nextIsListCall(self)
@@ -127,7 +128,7 @@ end
 function Interpreter.extractIdentifier(self)
     local value = self.rest:match("^[A-Za-z_][A-Za-z0-9_]*")
     if value == "true" or value == "false" then
-        table.insert(self.parts, self:getValueObject("boolean", value))
+        table.insert(self.parts, self:getValueObject("boolean", value == "true"))
     elseif value == "none" then
         table.insert(self.parts, self:getValueObject("none", "none"))
     else
@@ -153,7 +154,7 @@ function Interpreter.extractOperator(self)
 end
 
 function Interpreter.extractNumber(self)
-    local value = self.rest:match("^%d+%.?%d*")
+    local value = self.rest:match("^-?%d+%.?%d*")
     table.insert(self.parts, self:getValueObject("number", tonumber(value)))
     self:increaseIndex(value)
 end
@@ -236,6 +237,7 @@ function Interpreter.extractString(self)
         end
         index = index + 1
     end
+    self:increaseIndex("", index)
     table.insert(self.parts, self:getValueObject("string", str))
 end
 
@@ -247,10 +249,10 @@ function Interpreter.deconstruct(self, stop)
             self:extractListCall()
         elseif self:nextIsIdentifier() then
             self:extractIdentifier()
-        elseif self:nextIsOperator() then
-            self:extractOperator()
         elseif self:nextIsNumber() then
             self:extractNumber()
+        elseif self:nextIsOperator() then
+            self:extractOperator()
         elseif self:nextIsString() then
             self:extractString()
         elseif self:nextIsListConstruction() then
@@ -280,7 +282,6 @@ end
 
 function Interpreter.setVariable(self, destination, value)
     if destination.vt == "user_variable" then
-        --print("DESTINATION: ", destination.v, "VALUE: ", value.v)
         if not (self.envs[#self.envs].mode == "outside") then
             local env = self.scopes[#self.scopes]
             for i = #env, 1, -1 do
@@ -304,8 +305,8 @@ function Interpreter.setVariable(self, destination, value)
                                 break
                             end
                         end
-                        --print("SETTING NEW LOCAL VARIABLE")
-                        env[i][destination.v] = self:getValueObject(value.vt, value.v, value.keys)
+                        local result = self:getVariable(value)
+                        env[i][destination.v] = self:getValueObject(result.vt, result.v, result.keys)
                         return
                     end
                 end
@@ -372,6 +373,7 @@ function Interpreter.setVariable(self, destination, value)
             
     elseif destination.vt == "temporary_variable" then
         local result = self:getVariable(value)
+        --print("", "RESULT: ", result.vt, result.v)
         self.temp_variables[destination.v] = self:getValueObject(result.vt, result.v, result.keys)
     elseif destination.vt == "argument_list" then
         local result = self:getVariable(value)
@@ -432,7 +434,7 @@ function Interpreter.getVariable(self, source)
             end
         end
         --print("GETTING:", source.vt, source.v)
-        print("ERROR: VARIABLE NOT FOUND")
+        print("ERROR: VARIABLE NOT FOUND ( " .. source.v .. " )")
         return self:getValueObject("none", "none")
     elseif source.vt == "temporary_variable" then
         return self.temp_variables[source.v]
@@ -446,8 +448,19 @@ end
 
 ----------[ EXECUTION FUNCTIONS ]----------
 function Interpreter.executeInstruction(self, operator, value1, value2)
+    --print("", value1.vt, value1.v, operator.v, value2.vt, value2.v)
     if operator.v == "=" then
+        --print("CHECK", value1.v, value2.v)
         self:setVariable(value1, value2)
+    elseif operator.v:match("^[%^%+%-%*%/%%]=") then
+        if value1.vt:match("^.+_variable$") then
+            local result = self:executeInstruction(self:getValueObject("operator", operator.v:sub(1, 1)), value1, value2)
+            self:setVariable(value1, result)
+        else
+            print("ERROR: OPERATOR MUST BE USED TO ASSIGN VALUES ( " .. operator.v .. " )")
+            self.fatal_error = true
+            return self:getValueObject("none", "none")
+        end
     else
         value1 = self:getVariable(value1)
         value2 = self:getVariable(value2)
@@ -474,11 +487,6 @@ function Interpreter.executeInstruction(self, operator, value1, value2)
                     rt = "number"
                     rv = v1 * v2
                 elseif operator.v == "/" then
-                    if v2 ~= 0 then
-                        rt = "number"
-                        rv = v1 / v2
-                    end
-                elseif operator.v == "+" then
                     if v2 ~= 0 then
                         rt = "number"
                         rv = v1 / v2
@@ -515,14 +523,37 @@ function Interpreter.executeInstruction(self, operator, value1, value2)
                     rv = bit.band(v1, v2)
                 end
             end
+        elseif t1 == "boolean" and t2 == "boolean" then
+            rt = "boolean"
+            if operator.v == "==" then
+                rv = v1 == v2
+            elseif operator.v == "!=" then
+                rv = v1 ~= v2
+            elseif operator.v == "&&" then
+                rv = v1 and v2
+            elseif operator.v == "||" then
+                rv = v1 or v2
+            end
         elseif t1 == "string" then
             if operator.v == "+" then
                 rt = "string"
                 rv = v1 .. tostring(v2)
+            elseif operator.v == "==" then
+                rt = "boolean"
+                rv = false
+                if v1 == v2 then
+                    rv = true
+                end 
+            elseif operator.v == "~=" then
+                rt = "boolean"
+                rv = false
+                if v1 ~= v2 then
+                    rv = true
+                end 
             end
         elseif t1 == "list" then
             if t2 == "list" then
-                if operator.v == "+" then
+                if operator.v == "++" then
                     rt = "list"
                     rv = {}
                     for i = 1, #v1, 1 do
@@ -531,15 +562,20 @@ function Interpreter.executeInstruction(self, operator, value1, value2)
                     for i = 1, #v2, 1 do
                         table.insert(rv, self:getValueObject(v2[i].vt, v2[i].v))
                     end
+                elseif operator.v == "<-" then
+                    table.insert(v1, self:getValueObject(t2, v2))
+                    return value1
+                else
+                    rt = "list"
+                    rv = {}
+                    for i = 1, math.min(#v1, #v2), 1 do
+                        table.insert(rv, self:executeInstruction(operator, v1[i], v2[i]))
+                    end
                 end
             else
                 if operator.v == "<-" then
-                    rt = "list"
-                    rv = {}
-                    for i = 1, #v1, 1 do
-                        table.insert(rv, self:getValueObject(v1[i].vt, v1[i].v))
-                    end
-                    table.insert(rv, self:getValueObject(t2, v2))
+                    table.insert(v1, self:getValueObject(t2, v2))
+                    return value1
                 end
             end
         elseif t1 == "none" then
@@ -586,10 +622,13 @@ function Interpreter.evaluateNextLine(self)
             table.remove(self.envs, #self.envs)
         end
     end
+    return self.fatal_error
 end
 
 function Interpreter.structure(self, line)
-    --print("LINE:", line)
+    --print("", "LINE:", line)
+    self.current_code_line = tonumber(line:match("^(%d+)|%s+.*"))
+    line = line:gsub("^%d+| ", "")
     if line:match("^push function env$") then
         --table.insert(self.scopes[#self.scopes], {}) 
     elseif line:match("^pop function env$") then
@@ -687,6 +726,7 @@ function Interpreter.getVectorListObject(self, vec)
 end
 
 function Interpreter.executeSystemFunction(self, name, values)
+    --print("NAME: ", name, #values.v)
     self:setVariable(self:getValueObject("temporary_variable", "t_return"), self:getValueObject("none", "none"))
     if name == "print" then
         print("[HLL]: ", self:getDeepString(values))
@@ -712,6 +752,8 @@ function Interpreter.executeSystemFunction(self, name, values)
             self:setVariable(self:getValueObject("temporary_variable", "t_return"), self:getValueObject("number", math.random()))
         elseif name == "time" then
             self:setVariable(self:getValueObject("temporary_variable", "t_return"), self:getValueObject("number", os.time()))
+        elseif name == "input" then
+            self:setVariable(self:getValueObject("temporary_variable", "t_return"), self:getValueObject("string", io.read()))
         end
     elseif #values.v == 1 then
         if name == "type" then
@@ -725,6 +767,12 @@ function Interpreter.executeSystemFunction(self, name, values)
             end
             self:setVariable(self:getValueObject("temporary_variable", "t_return"), self:getValueObject("boolean", false))
             return
+        elseif name == "char" and values.v[1].vt == "number" then
+            if values.v[1].v >= 0 then
+                self:setVariable(self:getValueObject("temporary_variable", "t_return"), self:getValueObject("string", string.char(values.v[1].v)))
+            else
+                print("ERROR: INVALID VALUE TO CONVERT TO CHAR (VALUE >= 0)")
+            end
         elseif name == "remove" and values.v[1].vt == "string" then
             for i = 1, #self.files, 1 do
                 if self.files[i].header.filename == values.v[1].v then
@@ -802,23 +850,43 @@ function Interpreter.executeSystemFunction(self, name, values)
             end
             self:setVariable(self:getValueObject("temporary_variable", "t_return"), self:getValueObject("number", math.sqrt(sum)))
         elseif name == "str" then
-        
+            if values.v[1].vt == "list" then
+                local str = ""
+                for i = 1, #values.v[1].v, 1 do
+                    if values.v[1].v[i].vt == "number" then
+                        if values.v[1].v[i].v >= 0 then
+                            str = str .. string.char(values.v[1].v[i].v)
+                        else
+                            print("ERROR: INVALID VALUE TO CONVERT TO CHAR (VALUE >= 0)")
+                            return
+                        end
+                    else
+                        print("ERROR: TRYING TO CONSTRUCT A STRING FROM LIST WITH NON NUMERIC VALUES")
+                        return
+                    end
+                end
+                self:setVariable(self:getValueObject("temporary_variable", "t_return"), self:getValueObject("string", str))
+            elseif values.v[1].vt == "number" then
+                self:setVariable(self:getValueObject("temporary_variable", "t_return"), self:getValueObject("string", tostring(values.v[1].v)))
+            end
         elseif name == "num" and values.v[1].vt == "string" then
-            if values.v[1].v:match("^%d+") then
-                self:setVariable(self:getValueObject("temporary_variable", "t_return"), self:getValueObject("number", #values.v[1].v))
+            if values.v[1].v:match("^%d+.?%d*$") then
+                self:setVariable(self:getValueObject("temporary_variable", "t_return"), self:getValueObject("number", tonumber(values.v[1].v)))
             end
         elseif name == "size" then
             if values.v[1].vt == "list" then
                 self:setVariable(self:getValueObject("temporary_variable", "t_return"), self:getValueObject("number", #values.v[1].v))
             elseif values.v[1].vt == "fileiterator" then
                 self:setVariable(self:getValueObject("temporary_variable", "t_return"), self:getValueObject("number", #values.v[1].v.ref.content))
+            elseif values.v[1].vt == "string" then
+                self:setVariable(self:getValueObject("temporary_variable", "t_return"), self:getValueObject("number", #values.v[1].v))
             end
         elseif values.v[1].vt == "number" then
             if name == "abs" then
                 self:setVariable(self:getValueObject("temporary_variable", "t_return"), self:getValueObject("number", math.abs(values.v[1].v)))
             elseif name == "seed" then
                 math.randomseed(values.v[1].v)
-                self:setVariable(self:getValueObject("temporary_variable", "t_return"), self:getValueObject("number", values.v[1].v))
+                self:setVariable(self:getValueObject("temporary_variable", "t_return"), self:getValueObject("none", "none"))
             elseif name == "deg" then
                 self:setVariable(self:getValueObject("temporary_variable", "t_return"), self:getValueObject("number", math.deg(values.v[1].v)))
             elseif name == "rad" then
@@ -870,6 +938,17 @@ function Interpreter.executeSystemFunction(self, name, values)
                     table.insert(combined, self:getValueObject(values.v[2].v[i].vt, values.v[2].v[i].v, values.v[2].v[i].keys))
                 end
                 self:setVariable(self:getValueObject("temporary_variable", "t_return"), self:getValueObject("list", combined))
+            end
+        elseif name == "matches" and values.v[1].vt == "string" and values.v[2].vt == "string" then
+            if pcall(function(data, pattern) data:match(pattern) end, values.v[1].v, values.v[2].v) then
+                if values.v[1].v:match(values.v[2].v) then
+                    self:setVariable(self:getValueObject("temporary_variable", "t_return"), self:getValueObject("boolean", true))
+                else
+                    self:setVariable(self:getValueObject("temporary_variable", "t_return"), self:getValueObject("boolean", false))
+                end
+            else
+                print("ERROR: INVALID PATTERN ( " .. values.v[2].v .. " )")
+                self:setVariable(self:getValueObject("temporary_variable", "t_return"), self:getValueObject("boolean", false))
             end
         elseif name == "line" and values.v[1].vt == "fileiterator" and values.v[2].vt == "number" then
             if values.v[1].v.ref.content[values.v[2].v] then
@@ -1005,6 +1084,15 @@ function Interpreter.executeSystemFunction(self, name, values)
     elseif #values.v == 3 then
         if name == "insert" and values.v[1].vt == "stream" and values.v[2].vt == "number" and values.v[3].vt == "string" then
             table.insert(values.v[1].v.ref.content, values.v[2].v, values.v[3].v)
+        elseif name == "substring" and values.v[1].vt == "string" and values.v[2].vt == "number" and values.v[3].vt == "number" then
+            self:setVariable(self:getValueObject("temporary_variable", "t_return"), self:getValueObject("string", values.v[1].v:sub(values.v[2].v, values.v[3].v)))
+        elseif name == "replace" and values.v[1].vt == "string" and values.v[2].vt == "string" and values.v[3].vt == "string" then
+            if pcall(function(data, pattern, replacement) data:gsub(pattern, replacement) end, values.v[1].v, values.v[2].v, values.v[3].v) then
+                self:setVariable(self:getValueObject("temporary_variable", "t_return"), self:getValueObject("string", values.v[1].v:gsub(values.v[2].v, values.v[3].v)))
+            else
+                print("ERROR: INVALID PATTERN ( " .. values.v[2].v .. " )")
+                self:setVariable(self:getValueObject("temporary_variable", "t_return"), self:getValueObject("none", "none"))
+            end
         end
     end
 end

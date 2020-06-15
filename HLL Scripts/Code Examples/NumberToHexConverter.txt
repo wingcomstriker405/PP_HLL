@@ -1,0 +1,24 @@
+def createHexList()
+    hex_list = []
+    for i = 0, i < 16, i += 1
+        if i < 10
+            hex_list[i] = str(i)
+        else
+            hex_list[i] = char(97 + i - 10)
+        end
+    end
+    return hex_list
+end
+
+def convertNumberToHex(number)
+    hex_list = createHexList()
+    hex_value = ''
+    while number > 0
+        hex_value = hex_list[number % 16] + hex_value
+        number = floor(number / 16)
+    end
+    return '0x' + hex_value
+end
+
+print(convertNumberToHex(255))
+print(convertNumberToHex(15135))

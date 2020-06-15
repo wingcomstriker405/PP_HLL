@@ -1,0 +1,141 @@
+hex_abc = []
+
+#main function to start the login process
+def main()
+    createHexDictionary()
+    print('enter your username!')
+    username = input()
+    print('enter your password!')
+    password = input()
+    if validUserInformation(username, password)
+        print('hello ' + username + '!')
+        mainmenu()
+    else
+        print('user information is invalid')
+    end
+end
+
+#function that creates a full hex dictionary for easy use later
+def createHexDictionary()
+    for i = 0, i < 16, i += 1
+        if i < 10
+            hex_abc[i] = str(i)
+            hex_abc[str(i)] = i
+        else
+            hex_abc[i] = char(87 + i)
+            hex_abc[char(87 + i)] = i
+        end
+    end
+end
+
+#compares username and password to entries in a local file
+def validUserInformation(username, password)
+    f = open('accounts')
+    while current(f) <= size(f)
+        if next(f) == username && next(f) == password
+            return true
+        end
+    end
+    return false
+end
+
+#menu after you loged in
+def mainmenu()
+    while true
+        print('what do you want to do?')
+        print('1 - convert r g b values to int rgb value')
+        print('2 - convert int rgb value to r g b values')
+        print('3 - convert int to hex')
+        print('4 - convert hex to int')
+        print('exit - leave')
+        option = input()
+        if option == '1'
+            rgbToIntRgb()
+        elseif option == '2'
+            intRgbToRgb()
+        elseif option == '3'
+            intToHex()
+        elseif option == '4'
+            hexToInt()
+        elseif option == 'exit'
+            return
+        end
+    end
+end
+
+#r g b to int rgb
+def rgbToIntRgb()
+    print('enter the red value!')
+    str_r = input()
+    print('enter the green value!')
+    str_g = input()
+    print('enter the blue value!')
+    str_b = input()
+    if matches(str_r, '^%d+$') && matches(str_g, '^%d+$') && matches(str_b, '^%d+$')
+        value = (num(str_r) << 16) | (num(str_g) << 8) | (num(str_b))
+        print('int rgb value is: ', value)
+    else
+        print('values not valid!')
+    end
+    input()
+end
+
+#int rgb to r g b
+def intRgbToRgb()
+    print('enter int rgb value!')
+    str_int_rgb = input()
+    if matches(str_int_rgb, '^%d+$')
+        value = num(str_int_rgb)
+        r = value >> 16 & 255
+        g = value >> 8 & 255
+        b = value >> 0 & 255
+        print('R: ' + r, 'G: ' + g, 'B: ' + b)
+    else
+        print('value not valid!')
+    end
+    input()
+end
+
+#int to hex
+def intToHex(number)
+    print('enter a positive integer!')
+    str_int = input()
+    if matches(str_int, '^%d+$')
+        number = num(str_int)
+        hex_value = ''
+        while number > 0
+            hex_value = hex_abc[number % 16 + 1] + hex_value
+            number = floor(number / 16)
+        end
+        print('HEX: 0x' + hex_value)
+    else
+        print('invalid number')
+    end
+    input()
+end
+
+#hex to int
+def hexToInt()
+    print('enter hex value (e.g. 0xff or ff)')
+    str_hex = input()
+    hex = ''
+    if matches(str_hex, '^0x[0-9a-f]+$')
+        hex = replace(str_hex, '^0x', '')
+    elseif matches(str_hex, '^[0-9a-f]+$')
+        hex = str_hex
+    end
+    s = size(hex)
+    if s > 0
+        sum = 0
+        for i = 1, i <= s, i += 1
+            sum += hex_abc[substring(hex, i, i)] * 16 ^ (s - i)
+        end
+        print('number: ' + sum)
+    else
+        print('invalid value!')
+    end
+    input()
+end
+
+
+main()
